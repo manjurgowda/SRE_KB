@@ -1,0 +1,162 @@
+Kubernetes Cluster
+│
+├── 🔹 Cluster-Scoped Resources (No Namespace)
+│   │
+│   ├── Nodes
+│   │   └── (kubectl get nodes)
+│   │
+│   ├── Namespaces  ← Logical Isolation Boundary
+│   │   └── (kubectl get ns)
+│   │
+│   ├── RBAC (Cluster-wide)
+│   │   ├── ClusterRole
+│   │   ├── ClusterRoleBinding
+│   │   └── (kubectl get clusterrole,clusterrolebinding)
+│   │
+│   ├── Storage
+│   │   ├── StorageClass
+│   │   ├── PersistentVolume (PV)
+│   │   └── (kubectl get sc,pv)
+│   │
+│   ├── Networking
+│   │   ├── NetworkPolicy (can also be namespaced)
+│   │   ├── IngressClass
+│   │   └── (kubectl get ingressclass,netpol --all-namespaces)
+│   │
+│   ├── Scheduling
+│   │   ├── PriorityClass
+│   │   └── (kubectl get priorityclass)
+│   │
+│   ├── Policy / Security
+│   │   ├── PodSecurityAdmission (labels on namespace)
+│   │
+│   ├── Custom Extensions
+│   │   ├── CustomResourceDefinition (CRD)
+│   │   └── (kubectl get crd)
+│   │
+│   └── Admission / API
+│       ├── MutatingWebhookConfiguration
+│       ├── ValidatingWebhookConfiguration
+│       └── (kubectl get mutatingwebhookconfiguration,validatingwebhookconfiguration)
+│
+│
+├── 🔸 Namespace: <name>  (dev / prod / staging)
+│   │   👉 switch: kubectl config set-context --current --namespace=<name>
+│   │   👉 view:   kubectl config view --minify | grep namespace
+│   │
+│   ├── 🧠 Workloads (Controllers → Pods)
+│   │   │
+│   │   ├── Deployment
+│   │   │     └── ReplicaSet
+│   │   │          └── Pod
+│   │   │
+│   │   ├── StatefulSet
+│   │   │     └── Pod (stable identity + storage)
+│   │   │
+│   │   ├── DaemonSet
+│   │   │     └── Pod (1 per node)
+│   │   │
+│   │   ├── Job
+│   │   │     └── Pod (run-to-completion)
+│   │   │
+│   │   ├── CronJob
+│   │   │     └── Job → Pod
+│   │   │
+│   │   └── (kubectl get deploy,rs,po,sts,ds,job,cronjob)
+│   │
+│   │   🔁 Flow:
+│   │   Deployment → ReplicaSet → Pod
+│   │   CronJob → Job → Pod
+│   │   DaemonSet → Pod (per node)
+│
+│   ├── 🌐 Networking
+│   │   │
+│   │   ├── Service
+│   │   │   ├── ClusterIP
+│   │   │   ├── NodePort
+│   │   │   └── LoadBalancer
+│   │   │
+│   │   ├── Ingress
+│   │   ├── Endpoint / EndpointSlice
+│   │   ├── NetworkPolicy
+│   │   │
+│   │   └── (kubectl get svc,ingress,endpoints,endpointslices,netpol)
+│   │
+│   │   🔁 Flow:
+│   │   Ingress → Service → Pod
+│   │   Service → EndpointSlice → Pod (via labels)
+│
+│   ├── ⚙️ Configuration
+│   │   │
+│   │   ├── ConfigMap
+│   │   ├── Secret
+│   │   │
+│   │   └── (kubectl get cm,secret)
+│   │
+│   │   🔁 Flow:
+│   │   ConfigMap/Secret → mounted/env → Pod
+│
+│   ├── 💾 Storage
+│   │   │
+│   │   ├── PersistentVolumeClaim (PVC)
+│   │   │
+│   │   └── (kubectl get pvc)
+│   │
+│   │   🔁 Flow:
+│   │   Pod → PVC → PV → StorageClass
+│
+│   ├── 🔐 RBAC (Namespace Scope)
+│   │   │
+│   │   ├── Role
+│   │   ├── RoleBinding
+│   │   ├── ServiceAccount
+│   │   │
+│   │   └── (kubectl get role,rolebinding,sa)
+│   │
+│   │   🔁 Flow:
+│   │   RoleBinding → Role → ServiceAccount → Pod
+│
+│   ├── 📈 Autoscaling
+│   │   │
+│   │   ├── HorizontalPodAutoscaler (HPA)
+│   │   └── (kubectl get hpa)
+│   │
+│   │   🔁 Flow:
+│   │   HPA → Deployment/StatefulSet → Pods scale
+│
+│   ├── 🛡️ Policy / Reliability
+│   │   │
+│   │   ├── PodDisruptionBudget (PDB)
+│   │   ├── LimitRange
+│   │   ├── ResourceQuota
+│   │   │
+│   │   └── (kubectl get pdb,limitrange,resourcequota)
+│   │
+│   │   🔁 Flow:
+│   │   PDB → controls Pod eviction
+│   │   ResourceQuota → limits namespace usage
+│
+│   ├── 📊 Observability / Debug
+│   │   │
+│   │   ├── Event
+│   │   └── (kubectl get events)
+│   │
+│   └── 🧩 Custom Resources (via CRDs)
+│       │
+│       ├── Any CR (e.g., Prometheus, ArgoCD apps)
+│       └── (kubectl get <crd-kind>)
+│
+│       🔁 Flow:
+│       CRD → Custom Resource → Controller → Pods/Infra
+│
+│
+└── 🔄 Cross-Cutting Flow Summary
+    │
+    ├── User → Ingress → Service → Pod
+    ├── Deployment → ReplicaSet → Pod
+    ├── CronJob → Job → Pod
+    ├── Pod → PVC → PV → StorageClass
+    ├── HPA → Deployment → Pods (scale)
+    ├── ConfigMap/Secret → Pod (env/mount)
+    ├── RoleBinding → Role → ServiceAccount → Pod
+    └── CRD → Controller → Managed Resources
